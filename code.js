@@ -120,7 +120,8 @@ function cambiarEstado(id) {
         item.estado = 'limpio';
     }
     
-    guardar();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+        renderizar(); 
 }
 
 // 1. Asegúrate de tener esta función para limpiar los datos
