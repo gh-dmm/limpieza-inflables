@@ -71,8 +71,9 @@ function renderizar() {
                             <i class="bi bi-stars"></i> Marcar Limpio
                         </button>
                         <button class="btn btn-danger btn-sm" onclick="reparar(${item.id})">
-                            <i class="bi bi-stars"></i> Reparar
-                        </button>
+    <i class="bi bi-tools"></i> Reparar
+</button>
+
                     </div>
                 </div>
             </div>
