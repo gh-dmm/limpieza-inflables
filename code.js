@@ -70,6 +70,9 @@ function renderizar() {
                         <button class="btn btn-outline-secondary btn-sm" onclick="cambiarEstado(${item.id})">
                             <i class="bi bi-stars"></i> Marcar Limpio
                         </button>
+                        <button class="btn btn-danger btn-sm" onclick="reparar(${item.id})">
+                            <i class="bi bi-stars"></i> Reparar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -95,6 +98,9 @@ function rentar(id) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
     renderizar();
 }
+function reparar(id){
+    item.estado='en-reparacion':
+}
 function cambiarEstado(id) {
     const item = inflables.find(i => i.id === id);
     
@@ -102,7 +108,7 @@ function cambiarEstado(id) {
     if (item.estado === 'limpio') {
         item.estado = 'sucio';
     } else if (item.estado === 'sucio') {
-        item.estado = 'en-reparacion';
+        item.estado = 'limpio';
     } else {
         item.estado = 'limpio';
     }
