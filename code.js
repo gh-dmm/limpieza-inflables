@@ -1,0 +1,152 @@
+const STORAGE_KEY = 'inflables_data';
+const iniciales = [
+    { id: 1, nombre: "Castillo", rentas: 0, estado: 'limpio' },
+    { id: 2, nombre: "Unicornios", rentas: 0, estado: 'limpio' },
+    { id: 3, nombre: "Princesas", rentas: 0, estado: 'limpio' },
+    { id: 4, nombre: "Doble resbaladilla", rentas: 0, estado: 'limpio' },
+    { id: 5, nombre: "Paw patrol", rentas: 0, estado: 'limpio' },
+    { id: 6, nombre: "Bluey", rentas: 0, estado: 'limpio' },
+    { id: 7, nombre: "Mickey", rentas: 0, estado: 'limpio' },
+    { id: 8, nombre: "Dinosaurios", rentas: 0, estado: 'limpio' },
+    { id: 9, nombre: "Multi-interactivo", rentas: 0, estado: 'limpio' },
+    { id: 10, nombre: "Mario", rentas: 0, estado: 'limpio' },
+    { id: 11, nombre: "Spiderman", rentas: 0, estado: 'limpio' }
+    // ... agrega hasta los 11
+];
+
+let inflables = JSON.parse(localStorage.getItem(STORAGE_KEY)) || iniciales;
+function resetApp() {
+    if(confirm("¿Estás seguro de borrar TODA la base de datos local y reiniciar?")) {
+        localStorage.removeItem('inflables_data');
+        location.reload();
+    }
+}
+function mostrarReporte() {
+    const modalContenido = document.getElementById('reporte-contenido');
+    
+    // Filtrar por categorías
+    const limpios = inflables.filter(i => i.estado === 'limpio');
+    const sucios = inflables.filter(i => i.estado === 'sucio');
+
+    // Construir el HTML del reporte
+    modalContenido.innerHTML = `
+        <h6 class="text-success">Limpios (${limpios.length}):</h6>
+        <ul>${limpios.map(i => `<li>${i.nombre}</li>`).join('') || '<li>Ninguno</li>'}</ul>
+        
+        <h6 class="text-danger">Sucios (${sucios.length}):</h6>
+        <ul>${sucios.map(i => `<li>${i.nombre}</li>`).join('') || '<li>Ninguno</li>'}</ul>
+    `;
+
+    // Mostrar el modal usando la API de Bootstrap
+    const modal = new bootstrap.Modal(document.getElementById('reporteModal'));
+    modal.show();
+}
+function renderizar() {
+    const container = document.getElementById('inflables-container');
+    container.innerHTML = '';
+    
+    inflables.forEach(item => {
+        const col = document.createElement('div');
+        col.className = 'col';
+        
+        // Determinar color de badge
+        const badgeClass = item.estado === 'limpio' ? 'bg-primary' : 'bg-warning text-dark';
+        const icono = item.estado === 'limpio' ? 'bi-check-circle' : 'bi-exclamation-triangle';
+
+        col.innerHTML = `
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">${item.nombre}</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge ${badgeClass} badge-status"><i class="bi ${icono}"></i> ${item.estado.toUpperCase()}</span>
+                        <span class="text-muted fw-bold">Rentado: ${item.rentas} veces</span>
+                    </div>
+                    
+                    <p class="card-text">
+                        <small class="text-muted">
+                        Rentas: <strong>${item.rentas}</strong> 
+                        ${item.fechaUltimaRenta ? `<br>Última renta: ${item.fechaUltimaRenta}` : ''}
+                        </small>
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-sm" onclick="rentar(${item.id})">
+                            <i class="bi bi-plus-circle"></i> Rentar
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="cambiarEstado(${item.id})">
+                            <i class="bi bi-stars"></i> Marcar Limpio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(col);
+    });
+}
+
+function rentar(id) {
+    const item = inflables.find(i => i.id === id);
+    
+    // Obtener fecha actual en formato local
+    const fechaActual = new Date().toLocaleDateString('es-ES', {
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric'
+    });
+
+    item.rentas++;
+    item.estado = 'sucio';
+    item.fechaUltimaRenta = fechaActual; // Nuevo campo para el historial
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+    renderizar();
+}
+function cambiarEstado(id) {
+    const item = inflables.find(i => i.id === id);
+    item.estado = 'limpio';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+    renderizar();
+}
+// 1. Asegúrate de tener esta función para limpiar los datos
+function limpiarDatos() {
+    if (confirm("¿Estás seguro de que quieres reiniciar todos los contadores a cero y marcar todos como limpios?")) {
+        // Reiniciamos los valores en memoria
+        inflables = inflables.map(item => ({
+            ...item, 
+            rentas: 0, 
+            estado: 'limpio'
+        }));
+        
+        // Sincronizamos con localStorage
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+        
+        // Renderizamos para ver el cambio instantáneo
+        renderizar();
+    }
+}
+
+// 2. Implementación de Exportar a Excel (Formato CSV)
+function exportarExcel() {
+    // 1. Cabeceras con acentos (agregamos Última Renta)
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFFID,Nombre,Rentas,Estado,Última Renta\n";
+    
+    // 2. Iteración sobre los inflables
+    inflables.forEach(item => {
+        // Usamos una lógica sencilla para evitar que las comas en los nombres rompan el CSV
+        const nombre = item.nombre.replace(/,/g, " ");
+        const fecha = item.fechaUltimaRenta || "Sin rentas";
+        
+        csvContent += `${item.id},${nombre},${item.rentas},${item.estado},${fecha}\n`;
+    });
+
+    // 3. Creación del archivo de descarga
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "reporte_inflables.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ... función limpiarDatos igual que antes
+renderizar();

@@ -1,0 +1,49 @@
+
+html,body {
+    /* La URL puede ser una ruta local o una URL de internet */
+    background-image:none/*url('./inflable.jpg')*/ !important;
+    /*
+    background-size: cover;        
+    background-position: center;   
+    background-attachment: fixed;
+    background-repeat: no-repeat;*/
+    min-height: 100vh;
+    background-color: #2814E0 !important;
+    font-family: sans-serif; padding: 20px;
+   /* padding-top: 80px !important;*/ 
+}
+.grid-container {
+    display: grid;
+    background: transparent !important;
+    grid-template-columns: 1fr 1fr; /* Dos columnas */
+    gap: 15px;
+    max-width: 600px;
+    margin-bottom: 30px;
+}
+
+.inflable-card {
+
+    background: transparent;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+.sticky-controls {
+    position: fixed; /* O 'sticky' */
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #f8f9fa; /* Color de fondo para que no se transparente */
+    padding: 15px 20px;
+    z-index: 1000;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); /* Sombra para resaltar el borde */
+}
+
+/* Añade un margen al body para que el contenido no se oculte debajo del header */
+.card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .badge-status { font-size: 0.8rem; }
+.card{transition: transform 0.2s, box-shadow 0.2s; border-radius: 15px;}
+.controls { display: flex; gap: 10px; }
+.sucio { background-color: #ffcccc; }
+.limpio { background-color: #ccffcc; }
