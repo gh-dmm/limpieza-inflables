@@ -102,10 +102,19 @@ function rentar(id) {
 }
 function cambiarEstado(id) {
     const item = inflables.find(i => i.id === id);
-    item.estado = 'limpio';
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
-    renderizar();
+    
+    // Ciclo de estados
+    if (item.estado === 'limpio') {
+        item.estado = 'sucio';
+    } else if (item.estado === 'sucio') {
+        item.estado = 'en-reparacion';
+    } else {
+        item.estado = 'limpio';
+    }
+    
+    guardar();
 }
+
 // 1. Asegúrate de tener esta función para limpiar los datos
 function limpiarDatos() {
     if (confirm("¿Estás seguro de que quieres reiniciar todos los contadores a cero y marcar todos como limpios?")) {
