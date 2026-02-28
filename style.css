@@ -20,7 +20,10 @@ html,body {
     max-width: 600px;
     margin-bottom: 30px;
 }
-
+.en-reparacion { 
+    background-color: #fff3cd; 
+    border: 1px solid #ffeeba;
+}
 .inflable-card {
 
     background: transparent;
