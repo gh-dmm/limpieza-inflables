@@ -22,25 +22,20 @@ function resetApp() {
     }
 }
 function mostrarReporte() {
-    const modalContenido = document.getElementById('reporte-contenido');
+    const reporte = inflables.reduce((acc, curr) => {
+        acc[curr.estado] = acc[curr.estado] || [];
+        acc[curr.estado].push(curr.nombre);
+        return acc;
+    }, {});
+
+    let mensaje = "Reporte de Inflables:\n\n";
+    for (const estado in reporte) {
+        mensaje += `${estado.toUpperCase()}: ${reporte[estado].join(', ')}\n`;
+    }
     
-    // Filtrar por categorías
-    const limpios = inflables.filter(i => i.estado === 'limpio');
-    const sucios = inflables.filter(i => i.estado === 'sucio');
-
-    // Construir el HTML del reporte
-    modalContenido.innerHTML = `
-        <h6 class="text-success">Limpios (${limpios.length}):</h6>
-        <ul>${limpios.map(i => `<li>${i.nombre}</li>`).join('') || '<li>Ninguno</li>'}</ul>
-        
-        <h6 class="text-danger">Sucios (${sucios.length}):</h6>
-        <ul>${sucios.map(i => `<li>${i.nombre}</li>`).join('') || '<li>Ninguno</li>'}</ul>
-    `;
-
-    // Mostrar el modal usando la API de Bootstrap
-    const modal = new bootstrap.Modal(document.getElementById('reporteModal'));
-    modal.show();
+    alert(mensaje);
 }
+
 function renderizar() {
     const container = document.getElementById('inflables-container');
     container.innerHTML = '';
