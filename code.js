@@ -63,7 +63,7 @@ function renderizar() {
                         ${item.fechaUltimaRenta ? `<br>Última renta: ${item.fechaUltimaRenta}` : ''}
                         </small>
                     </p>
-                    <div class="d-grid gap-2">
+                    <div class="d-grid gap-2 mt-2">
                         <button class="btn btn-success btn-sm" onclick="rentar(${item.id})">
                             <i class="bi bi-plus-circle"></i> Rentar
                         </button>
