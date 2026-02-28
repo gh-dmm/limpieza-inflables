@@ -15,6 +15,18 @@ const iniciales = [
 ];
 
 let inflables = JSON.parse(localStorage.getItem(STORAGE_KEY)) || iniciales;
+function marcarLimpio(id) {
+    const item = inflables.find(i => i.id === id);
+    
+    if (item) {
+        item.estado = 'limpio';
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+        
+        renderizar();
+    }
+}
+
 function resetApp() {
     if(confirm("¿Estás seguro de borrar TODA la base de datos local y reiniciar?")) {
         localStorage.removeItem('inflables_data');
@@ -67,7 +79,7 @@ function renderizar() {
                         <button class="btn btn-success btn-sm" onclick="rentar(${item.id})">
                             <i class="bi bi-plus-circle"></i> Rentar
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="cambiarEstado(${item.id})">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="marcarLimpio(${item.id})">
                             <i class="bi bi-stars"></i> Marcar Limpio
                         </button>
                         <button class="btn btn-danger btn-sm" onclick="reparar(${item.id})">
@@ -85,7 +97,6 @@ function renderizar() {
 function rentar(id) {
     const item = inflables.find(i => i.id === id);
     
-    // Obtener fecha actual en formato local
     const fechaActual = new Date().toLocaleDateString('es-ES', {
         day: '2-digit', 
         month: '2-digit', 
@@ -108,48 +119,26 @@ function reparar(id) {
     }
 }
 
-function cambiarEstado(id) {
-    const item = inflables.find(i => i.id === id);
-    
-    // Ciclo de estados
-    if (item.estado === 'limpio') {
-        item.estado = 'sucio';
-    } else if (item.estado === 'sucio') {
-        item.estado = 'limpio';
-    } else {
-        item.estado = 'limpio';
-    }
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
-        renderizar(); 
-}
 
-// 1. Asegúrate de tener esta función para limpiar los datos
+
+
 function limpiarDatos() {
     if (confirm("¿Estás seguro de que quieres reiniciar todos los contadores a cero y marcar todos como limpios?")) {
-        // Reiniciamos los valores en memoria
         inflables = inflables.map(item => ({
             ...item, 
             rentas: 0, 
             estado: 'limpio'
         }));
         
-        // Sincronizamos con localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
-        
-        // Renderizamos para ver el cambio instantáneo
         renderizar();
     }
 }
 
-// 2. Implementación de Exportar a Excel (Formato CSV)
 function exportarExcel() {
-    // 1. Cabeceras con acentos (agregamos Última Renta)
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFFID,Nombre,Rentas,Estado,Última Renta\n";
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFFID,Nombre,Rentas,Estado,Última Renta\n";
     
-    // 2. Iteración sobre los inflables
     inflables.forEach(item => {
-        // Usamos una lógica sencilla para evitar que las comas en los nombres rompan el CSV
         const nombre = item.nombre.replace(/,/g, " ");
         const fecha = item.fechaUltimaRenta || "Sin rentas";
         
