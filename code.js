@@ -18,13 +18,14 @@ let inflables = JSON.parse(localStorage.getItem(STORAGE_KEY)) || iniciales;
 function marcarLimpio(id) {
     const item = inflables.find(i => i.id === id);
     
-    if (item) {
+    if (item.estado==='sucio') {
         item.estado = 'limpio';
         
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+        
+    }else{if(item.estado==='limpio'){item.estado='sucio';}}
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
         
         renderizar();
-    }
 }
 
 function resetApp() {
