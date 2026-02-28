@@ -34,19 +34,31 @@ function resetApp() {
     }
 }
 function mostrarReporte() {
-    const reporte = inflables.reduce((acc, curr) => {
-        acc[curr.estado] = acc[curr.estado] || [];
-        acc[curr.estado].push(curr.nombre);
-        return acc;
-    }, {});
-
-    let mensaje = "Reporte de Inflables:\n\n";
-    for (const estado in reporte) {
-        mensaje += `${estado.toUpperCase()}: ${reporte[estado].join(', ')}\n`;
-    }
+    const modal = document.getElementById("miModal");
+    const contenedor = document.getElementById("contenido-reporte");
     
-    alert(mensaje);
+    // Agrupamos la lógica de lista que definimos antes
+    const grupos = {
+        limpio: inflables.filter(i => i.estado === 'limpio'),
+        sucio: inflables.filter(i => i.estado === 'sucio'),
+        'en-reparacion': inflables.filter(i => i.estado === 'en-reparacion')
+    };
+
+    let html = "<h2>Reporte Categorizado</h2><hr>";
+    for (const [estado, lista] of Object.entries(grupos)) {
+        html += `<h4>${estado.toUpperCase()}</h4><ul>`;
+        lista.forEach(i => html += `<li>${i.nombre} - Rentas: ${i.rentas}</li>`);
+        html += `</ul>`;
+    }
+
+    contenedor.innerHTML = html;
+    modal.style.display = "block"; // Abre el modal
 }
+
+function cerrarModal() {
+    document.getElementById("miModal").style.display = "none";
+}
+
 
 function renderizar() {
     const container = document.getElementById('inflables-container');
