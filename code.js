@@ -98,9 +98,15 @@ function rentar(id) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
     renderizar();
 }
-function reparar(id){
-    item.estado='en-reparacion':
+function reparar(id) {
+    const item = inflables.find(i => i.id === id);
+    if (item) {
+        item.estado = 'en-reparacion';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+        renderizar(); 
+    }
 }
+
 function cambiarEstado(id) {
     const item = inflables.find(i => i.id === id);
     
