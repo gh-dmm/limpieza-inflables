@@ -18,7 +18,7 @@ let inflables = JSON.parse(localStorage.getItem(STORAGE_KEY)) || iniciales;
 function marcarLimpio(id) {
     const item = inflables.find(i => i.id === id);
     
-    if (item.estado==='sucio') {
+    if (item.estado==='sucio'||item.estado==='en-reparacion') {
         item.estado = 'limpio';
         
         
