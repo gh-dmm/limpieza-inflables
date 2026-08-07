@@ -5,7 +5,7 @@ const { URL } = require('url');
 const PORT = process.env.PORT || 8080;
 
 // ⚠️ CONFIGURACIÓN DE SUPABASE: Reemplaza con tus credenciales reales
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wedwaqouqbthmwlyguge.supabase.co/rest/v1/';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wedwaqouqbthmwlyguge.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZHdhcW91cWJ0aG13bHlndWdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjY3MjcsImV4cCI6MjEwMTcwMjcyN30.rnq5eES-TYLI5OQsiugBHf5WfBvphnMZab7pB_geVlU';
 
 // Extraer el host de la URL de Supabase (ej: "xyz.supabase.co")
