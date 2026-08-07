@@ -34,26 +34,130 @@ function resetApp() {
         location.reload();
     }
 }
-function mostrarReporte() {
-    const modal = document.getElementById("miModal");
-    const contenedor = document.getElementById("contenido-reporte");
-    
-    // Agrupamos la lógica de lista que definimos antes
-    const grupos = {
-        limpio: inflables.filter(i => i.estado === 'limpio'),
-        sucio: inflables.filter(i => i.estado === 'sucio'),
-        'en-reparacion': inflables.filter(i => i.estado === 'en-reparacion')
-    };
+function abrirModalNuevoInflable() {
+    const modal = document.getElementById('nuevoInflableModal');
+    const input = document.getElementById('nombreNuevoInflable');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+}
 
-    let html = "<h2>Reporte Categorizado</h2><hr>";
-    for (const [estado, lista] of Object.entries(grupos)) {
-        html += `<h4>${estado.toUpperCase()}</h4><ul>`;
-        lista.forEach(i => html += `<li>${i.nombre} - Rentas: ${i.rentas}</li>`);
-        html += `</ul>`;
+function cerrarModalNuevoInflable() {
+    const modal = document.getElementById('nuevoInflableModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function guardarNuevoInflable() {
+    const input = document.getElementById('nombreNuevoInflable');
+    const nombre = input ? input.value.trim() : '';
+
+    if (!nombre) {
+        alert('Escribe el nombre del inflable antes de guardar.');
+        return;
     }
 
-    contenedor.innerHTML = html;
-    modal.style.display = "block"; // Abre el modal
+    const nuevoInflable = {
+        id: Date.now(),
+        nombre,
+        rentas: 0,
+        estado: 'limpio',
+        fechaUltimaRenta: ''
+    };
+
+    inflables.push(nuevoInflable);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+    cerrarModalNuevoInflable();
+    renderizar();
+
+    if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+        renderDashboard();
+    }
+}
+
+function mostrarReporte() {
+    const dashboardSection = document.getElementById('dashboard-section');
+    const inflablesContainer = document.getElementById('inflables-container');
+
+    if (dashboardSection && inflablesContainer) {
+        inflablesContainer.classList.add('d-none');
+        dashboardSection.classList.remove('d-none');
+        renderDashboard();
+    }
+}
+
+function volverInventario() {
+    const dashboardSection = document.getElementById('dashboard-section');
+    const inflablesContainer = document.getElementById('inflables-container');
+
+    if (dashboardSection && inflablesContainer) {
+        dashboardSection.classList.add('d-none');
+        inflablesContainer.classList.remove('d-none');
+    }
+}
+
+function renderDashboard() {
+    const totalRentas = inflables.reduce((acc, item) => acc + item.rentas, 0);
+    const limpios = inflables.filter(i => i.estado === 'limpio').length;
+    const sucios = inflables.filter(i => i.estado === 'sucio').length;
+    const reparaciones = inflables.filter(i => i.estado === 'en-reparacion').length;
+
+    const kpiRentas = document.getElementById('kpi-rentas');
+    const kpiLimpios = document.getElementById('kpi-limpios');
+    const kpiSucios = document.getElementById('kpi-sucios');
+    const kpiReparacion = document.getElementById('kpi-reparacion');
+
+    if (kpiRentas) kpiRentas.textContent = totalRentas;
+    if (kpiLimpios) kpiLimpios.textContent = limpios;
+    if (kpiSucios) kpiSucios.textContent = sucios;
+    if (kpiReparacion) kpiReparacion.textContent = reparaciones;
+
+    const barChart = document.getElementById('bar-chart');
+    if (barChart) {
+        barChart.innerHTML = inflables.map(item => {
+            const max = Math.max(...inflables.map(x => x.rentas), 1);
+            const width = Math.max((item.rentas / max) * 100, item.rentas > 0 ? 10 : 4);
+            return `<div class="bar-row">
+                <span class="bar-label">${item.nombre}</span>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: ${width}%;"></div>
+                </div>
+                <span class="bar-value">${item.rentas}</span>
+            </div>`;
+        }).join('');
+    }
+
+    const donutChart = document.getElementById('donut-chart');
+    const legend = document.getElementById('legend-list');
+    if (donutChart && legend) {
+        const total = inflables.length || 1;
+        const spare = Math.max(0, 100 - Math.round((limpios / total) * 100));
+        donutChart.style.background = `conic-gradient( #9fbd2b 0% ${Math.round((limpios/total)*100)}%, #B6491C ${Math.round((limpios/total)*100)}% ${Math.round(((limpios + sucios)/total)*100)}%, #9a7a34 ${Math.round(((limpios + sucios)/total)*100)}% 100%)`;
+        legend.innerHTML = `
+            <li><span class="legend-dot clean"></span>Limpios: ${limpios}</li>
+            <li><span class="legend-dot dirty"></span>Sucios: ${sucios}</li>
+            <li><span class="legend-dot repair"></span>Reparaciones: ${reparaciones}</li>
+        `;
+    }
+
+    const tableBody = document.getElementById('dashboard-table-body');
+    if (tableBody) {
+        tableBody.innerHTML = inflables.map(item => `
+            <tr>
+                <td><span class="row-name">${item.nombre}</span></td>
+                <td>${item.rentas}</td>
+                <td>
+                    <span class="status-pill ${item.estado}">${item.estado}</span>
+                </td>
+                <td>${item.fechaUltimaRenta || 'Sin renta'}</td>
+            </tr>
+        `).join('');
+    }
 }
 
 function cerrarModal() {
@@ -70,7 +174,7 @@ function renderizar() {
         col.className = 'col';
         
         // Determinar color de badge
-        const badgeClass = item.estado === 'limpio' ? 'bg-primary' : 'bg-warning text-dark';
+        const badgeClass = item.estado === 'limpio' ? 'badge-limpio' : 'badge-sucio';
         const icono = item.estado === 'limpio' ? 'bi-check-circle' : 'bi-exclamation-triangle';
 
         col.innerHTML = `
