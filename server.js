@@ -1,17 +1,28 @@
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 8080;
 
-// ⚠️ CONFIGURACIÓN DE SUPABASE: Reemplaza con tus credenciales reales o variables de entorno
+// ⚠️ CONFIGURACIÓN DE SUPABASE
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://wedwaqouqbthmwlyguge.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZHdhcW91cWJ0aG13bHlndWdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjY3MjcsImV4cCI6MjEwMTcwMjcyN30.rnq5eES-TYLI5OQsiugBHf5WfBvphnMZab7pB_geVlU';
-
-// Extraer el host de la URL de Supabase (ej: "xyz.supabase.co")
 const SUPABASE_HOST = new URL(SUPABASE_URL).host;
 
-// Función auxiliar para habilitar CORS y responder en formato JSON
+// Tipos MIME para tus archivos del frontend
+const MIME_TYPES = {
+    '.html': 'text/html',
+    '.css': 'text/css',
+    '.js': 'application/javascript',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon'
+};
+
 function sendJson(res, status, payload) {
     res.writeHead(status, {
         'Content-Type': 'application/json',
@@ -23,7 +34,6 @@ function sendJson(res, status, payload) {
     res.end(JSON.stringify(payload));
 }
 
-// Función para consultar datos en Supabase mediante HTTPS nativo
 function fetchFromSupabase(path, method, bodyPayload = null) {
     return new Promise((resolve, reject) => {
         const options = {
@@ -34,7 +44,6 @@ function fetchFromSupabase(path, method, bodyPayload = null) {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
                 'Content-Type': 'application/json',
-                // CORRECCIÓN CRÍTICA: Se añade resolution=merge-duplicates para habilitar UPSERT real en PostgreSQL
                 'Prefer': 'resolution=merge-duplicates,return=representation'
             }
         };
@@ -60,17 +69,37 @@ function fetchFromSupabase(path, method, bodyPayload = null) {
     });
 }
 
+// Función para servir archivos estáticos (index.html, code.js, style.css, etc.)
+function serveStaticFile(res, filePath) {
+    fs.readFile(filePath, (err, content) => {
+        if (err) {
+            if (err.code === 'ENOENT') {
+                res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end('<h1>404 - Archivo no encontrado</h1>');
+            } else {
+                res.writeHead(500);
+                res.end(`Error del servidor: ${err.code}`);
+            }
+        } else {
+            const ext = path.extname(filePath).toLowerCase();
+            const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+            res.writeHead(200, { 'Content-Type': `${contentType}; charset=utf-8` });
+            res.end(content, 'utf-8');
+        }
+    });
+}
+
 const server = http.createServer(async (req, res) => {
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
 
-    // Manejar peticiones de pre-vuelo (Preflight OPTIONS) requeridas por CORS
+    // CORS preflight
     if (req.method === 'OPTIONS') {
         sendJson(res, 204, null);
         return;
     }
 
+    // --- 1. RUTAS DE LA API ---
     if (requestUrl.pathname === '/api/inflables') {
-        // GET: Leer datos ordenados por ID de la base de datos
         if (req.method === 'GET') {
             try {
                 const response = await fetchFromSupabase('/rest/v1/inflables?select=*&order=id.asc', 'GET');
@@ -85,7 +114,6 @@ const server = http.createServer(async (req, res) => {
             return;
         }
 
-        // PUT: Actualización o inserción masiva (Upsert) en la base de datos
         if (req.method === 'PUT') {
             let body = '';
             req.on('data', chunk => body += chunk);
@@ -97,7 +125,6 @@ const server = http.createServer(async (req, res) => {
                         return;
                     }
 
-                    // CORRECCIÓN CRÍTICA: Se agrega el parámetro on_conflict=id en el path para indicar la clave única
                     const response = await fetchFromSupabase('/rest/v1/inflables?on_conflict=id', 'POST', incoming);
                     if (response.status >= 400) {
                         sendJson(res, response.status, { error: 'Error guardando en Supabase', details: response.body });
@@ -117,9 +144,14 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    sendJson(res, 404, { error: 'Endpoint no encontrado' });
+    // --- 2. SERVIDOR DE ARCHIVOS ESTÁTICOS (FRONTEND) ---
+    // Si la ruta no empieza con /api/, servimos los archivos de la carpeta actual
+    let filePath = path.join(__dirname, requestUrl.pathname === '/' ? 'index.html' : requestUrl.pathname);
+    serveStaticFile(res, filePath);
 });
 
 server.listen(PORT, () => {
-    console.log(`Servidor de API ejecutándose en el puerto ${PORT}`);
+    console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+    console.log(`- Frontend disponible en la raíz (/)`);
+    console.log(`- API disponible en (/api/inflables)`);
 });
