@@ -1,17 +1,19 @@
 const STORAGE_KEY = 'inflables_data';
+// Nota: Si despliegas frontend y backend en servidores/dominios separados, cambia '/api/inflables' por la URL absoluta de tu backend (ej. 'https://tu-dominio.com/api/inflables')
 const API_URL = '/api/inflables';
+
 const iniciales = [
-    { id: 1, nombre: "Castillo", rentas: 0, estado: 'limpio' },
-    { id: 2, nombre: "Unicornios", rentas: 0, estado: 'limpio' },
-    { id: 3, nombre: "Princesas", rentas: 0, estado: 'limpio' },
-    { id: 4, nombre: "Doble resbaladilla", rentas: 0, estado: 'limpio' },
-    { id: 5, nombre: "Paw patrol", rentas: 0, estado: 'limpio' },
-    { id: 6, nombre: "Bluey", rentas: 0, estado: 'limpio' },
-    { id: 7, nombre: "Mickey", rentas: 0, estado: 'limpio' },
-    { id: 8, nombre: "Dinosaurios", rentas: 0, estado: 'limpio' },
-    { id: 9, nombre: "Multi-interactivo", rentas: 0, estado: 'limpio' },
-    { id: 10, nombre: "Mario", rentas: 0, estado: 'limpio' },
-    { id: 11, nombre: "Spiderman", rentas: 0, estado: 'limpio' }
+    { id: 1, nombre: "Castillo", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 2, nombre: "Unicornios", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 3, nombre: "Princesas", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 4, nombre: "Doble resbaladilla", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 5, nombre: "Paw patrol", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 6, nombre: "Bluey", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 7, nombre: "Mickey", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 8, nombre: "Dinosaurios", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 9, nombre: "Multi-interactivo", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 10, nombre: "Mario", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' },
+    { id: 11, nombre: "Spiderman", rentas: 0, estado: 'limpio', fechaUltimaRenta: '' }
 ];
 
 let inflables = [];
@@ -76,6 +78,7 @@ function resetApp() {
         }
     }
 }
+
 function abrirModalNuevoInflable() {
     const modal = document.getElementById('nuevoInflableModal');
     const input = document.getElementById('nombreNuevoInflable');
@@ -104,8 +107,11 @@ function guardarNuevoInflable() {
         return;
     }
 
+    // CORRECCIÓN: Se genera un ID numérico secuencial entero para evitar overflow del tipo INTEGER en la base de datos
+    const nuevoId = inflables.length > 0 ? Math.max(...inflables.map(i => i.id)) + 1 : 1;
+
     const nuevoInflable = {
-        id: Date.now(),
+        id: nuevoId,
         nombre,
         rentas: 0,
         estado: 'limpio',
@@ -178,7 +184,6 @@ function renderDashboard() {
     const legend = document.getElementById('legend-list');
     if (donutChart && legend) {
         const total = inflables.length || 1;
-        const spare = Math.max(0, 100 - Math.round((limpios / total) * 100));
         donutChart.style.background = `conic-gradient( #9fbd2b 0% ${Math.round((limpios/total)*100)}%, #B6491C ${Math.round((limpios/total)*100)}% ${Math.round(((limpios + sucios)/total)*100)}%, #9a7a34 ${Math.round(((limpios + sucios)/total)*100)}% 100%)`;
         legend.innerHTML = `
             <li><span class="legend-dot clean"></span>Limpios: ${limpios}</li>
@@ -203,19 +208,21 @@ function renderDashboard() {
 }
 
 function cerrarModal() {
-    document.getElementById("miModal").style.display = "none";
+    const modal = document.getElementById("miModal");
+    if (modal) {
+        modal.style.display = "none";
+    }
 }
-
 
 function renderizar() {
     const container = document.getElementById('inflables-container');
+    if (!container) return;
     container.innerHTML = '';
     
     inflables.forEach(item => {
         const col = document.createElement('div');
         col.className = 'col';
         
-        // Determinar color de badge
         const badgeClass = item.estado === 'limpio' ? 'badge-limpio' : 'badge-sucio';
         const icono = item.estado === 'limpio' ? 'bi-check-circle' : 'bi-exclamation-triangle';
 
@@ -242,9 +249,8 @@ function renderizar() {
                             <i class="bi bi-stars"></i> Marcar Limpio
                         </button>
                         <button class="btn btn-danger btn-sm" onclick="reparar(${item.id})">
-    <i class="bi bi-tools"></i> Reparar
-</button>
-
+                            <i class="bi bi-tools"></i> Reparar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -255,6 +261,7 @@ function renderizar() {
 
 function rentar(id) {
     const item = inflables.find(i => i.id === id);
+    if (!item) return;
     
     const fechaActual = new Date().toLocaleDateString('es-ES', {
         day: '2-digit', 
@@ -273,6 +280,7 @@ function rentar(id) {
         renderDashboard();
     }
 }
+
 function reparar(id) {
     const item = inflables.find(i => i.id === id);
     if (item) {
@@ -286,15 +294,13 @@ function reparar(id) {
     }
 }
 
-
-
-
 async function limpiarDatos() {
     if (confirm("¿Estás seguro de que quieres reiniciar todos los contadores a cero y marcar todos como limpios?")) {
         inflables = inflables.map(item => ({
             ...item,
             rentas: 0,
-            estado: 'limpio'
+            estado: 'limpio',
+            fechaUltimaRenta: ''
         }));
 
         await guardarInflablesEnServidor();
@@ -307,7 +313,7 @@ async function limpiarDatos() {
 }
 
 function exportarExcel() {
-      let csvContent = "data:text/csv;charset=utf-8,\uFEFFID,Nombre,Rentas,Estado,Última Renta\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFFID,Nombre,Rentas,Estado,Última Renta\n";
     
     inflables.forEach(item => {
         const nombre = item.nombre.replace(/,/g, " ");
@@ -316,7 +322,6 @@ function exportarExcel() {
         csvContent += `${item.id},${nombre},${item.rentas},${item.estado},${fecha}\n`;
     });
 
-    // 3. Creación del archivo de descarga
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
