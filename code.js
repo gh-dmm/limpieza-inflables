@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'inflables_data';
+const API_URL = '/api/inflables';
 const iniciales = [
     { id: 1, nombre: "Castillo", rentas: 0, estado: 'limpio' },
     { id: 2, nombre: "Unicornios", rentas: 0, estado: 'limpio' },
@@ -11,27 +12,68 @@ const iniciales = [
     { id: 9, nombre: "Multi-interactivo", rentas: 0, estado: 'limpio' },
     { id: 10, nombre: "Mario", rentas: 0, estado: 'limpio' },
     { id: 11, nombre: "Spiderman", rentas: 0, estado: 'limpio' }
-    // ... agrega hasta los 11
 ];
 
-let inflables = JSON.parse(localStorage.getItem(STORAGE_KEY)) || iniciales;
-function marcarLimpio(id) {
-    const item = inflables.find(i => i.id === id);
-    
-    if (item.estado==='sucio'||item.estado==='en-reparacion') {
-        item.estado = 'limpio';
-        
-        
-    }else{if(item.estado==='limpio'){item.estado='sucio';}}
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
-        
+let inflables = [];
+
+async function cargarInflables() {
+    try {
+        const response = await fetch(API_URL, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error('No se pudo cargar inventario');
+        }
+
+        inflables = await response.json();
         renderizar();
+        if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+            renderDashboard();
+        }
+    } catch (error) {
+        console.error(error);
+        inflables = [...iniciales];
+        await guardarInflablesEnServidor();
+        renderizar();
+    }
+}
+
+async function guardarInflablesEnServidor() {
+    try {
+        await fetch(API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(inflables)
+        });
+    } catch (error) {
+        console.error('Error al guardar inventario en servidor:', error);
+    }
+}
+
+async function marcarLimpio(id) {
+    const item = inflables.find(i => i.id === id);
+    if (!item) return;
+
+    if (item.estado === 'sucio' || item.estado === 'en-reparacion') {
+        item.estado = 'limpio';
+    } else if (item.estado === 'limpio') {
+        item.estado = 'sucio';
+    }
+
+    await guardarInflablesEnServidor();
+    renderizar();
+
+    if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+        renderDashboard();
+    }
 }
 
 function resetApp() {
     if(confirm("¿Estás seguro de borrar TODA la base de datos local y reiniciar?")) {
-        localStorage.removeItem('inflables_data');
-        location.reload();
+        inflables = [...iniciales];
+        guardarInflablesEnServidor();
+        renderizar();
+        if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+            renderDashboard();
+        }
     }
 }
 function abrirModalNuevoInflable() {
@@ -71,8 +113,8 @@ function guardarNuevoInflable() {
     };
 
     inflables.push(nuevoInflable);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
     cerrarModalNuevoInflable();
+    guardarInflablesEnServidor();
     renderizar();
 
     if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
@@ -222,33 +264,45 @@ function rentar(id) {
 
     item.rentas++;
     item.estado = 'sucio';
-    item.fechaUltimaRenta = fechaActual; // Nuevo campo para el historial
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+    item.fechaUltimaRenta = fechaActual;
+
+    guardarInflablesEnServidor();
     renderizar();
+
+    if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+        renderDashboard();
+    }
 }
 function reparar(id) {
     const item = inflables.find(i => i.id === id);
     if (item) {
         item.estado = 'en-reparacion';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
-        renderizar(); 
+        guardarInflablesEnServidor();
+        renderizar();
+
+        if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+            renderDashboard();
+        }
     }
 }
 
 
 
 
-function limpiarDatos() {
+async function limpiarDatos() {
     if (confirm("¿Estás seguro de que quieres reiniciar todos los contadores a cero y marcar todos como limpios?")) {
         inflables = inflables.map(item => ({
-            ...item, 
-            rentas: 0, 
+            ...item,
+            rentas: 0,
             estado: 'limpio'
         }));
-        
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(inflables));
+
+        await guardarInflablesEnServidor();
         renderizar();
+
+        if (document.getElementById('dashboard-section') && !document.getElementById('dashboard-section').classList.contains('d-none')) {
+            renderDashboard();
+        }
     }
 }
 
@@ -272,5 +326,11 @@ function exportarExcel() {
     document.body.removeChild(link);
 }
 
-// ... función limpiarDatos igual que antes
-renderizar();
+async function boot() {
+    await cargarInflables();
+    setInterval(async () => {
+        await cargarInflables();
+    }, 3000);
+}
+
+boot();
