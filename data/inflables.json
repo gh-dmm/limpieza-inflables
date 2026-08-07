@@ -3,66 +3,77 @@
     "id": 1,
     "nombre": "Castillo",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 2,
     "nombre": "Unicornios",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 3,
     "nombre": "Princesas",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 4,
     "nombre": "Doble resbaladilla",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 5,
     "nombre": "Paw patrol",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 6,
     "nombre": "Bluey",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 7,
     "nombre": "Mickey",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 8,
     "nombre": "Dinosaurios",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 9,
     "nombre": "Multi-interactivo",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 10,
     "nombre": "Mario",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   },
   {
     "id": 11,
     "nombre": "Spiderman",
     "rentas": 0,
-    "estado": "limpio"
+    "estado": "limpio",
+    "fechaUltimaRenta": ""
   }
 ]
